@@ -1,0 +1,8 @@
+1) Fib function takes a very long time because we are using Naive recursion. For every single (n), we must run the fib function twice (fib n-2 and fib n-1). So if we had fib 33, we would have to run it at least 2^33 times.
+
+2) The values in the things list are the fibonacci sequence
+
+3) It doesn't calculate the values until they're actually needed (lazy evaluation, it simply stores the operation), so without needing to do constant calculations beforehand, it speeds up the process.
+
+4) We don't need to keep recalculating fibonacci naively. We don't need to keep multiplying multiplying down n throughout the calculation.
+
