@@ -10,58 +10,55 @@ width = 40              -- length of each chain in the table
 height = 1000           -- number of "rows" in the table
 filename = "table.txt"  -- filename to store the table
 
-
 convert :: Int -> [Int]
 convert n = (n `mod` nLetters) : (convert(n `div` nLetters))
 
-numToLetter :: [Int] -> Passwd
-numToLetter [] = []
-numToLetter (x:xs) = toLetter x : (numToLetter xs)
+passConvert :: [Int] -> Passwd
+passConvert [] = []
+passConvert (x:xs) = toLetter x : (passConvert xs)
 
 pwReduce :: Hash -> Passwd
-pwReduce n = numToLetter values
+pwReduce n = passConvert values
 	where values = reverse (take pwLength (convert (fromEnum n)))
 
 
 rainbowTable:: Int -> [Passwd] -> Map.Map Hash Passwd
-rainbowTable n xs = Map.fromList (zip hashes xs)
-    where hashes = hashList n xs
+rainbowTable n xs = Map.fromList (zip hash xs)
+    where hash = valueHasher n xs
 
-hashList:: Int -> [Passwd] -> [Hash]
-hashList 0 xs = listOfHashes xs
-hashList n xs = hashList (n-1) (hashAndReduceList xs)
+valueHasher:: Int -> [Passwd] -> [Hash]
+valueHasher 0 xs = hashes xs
+valueHasher n xs = valueHasher (n-1) (retryHash xs)
 
+retryHash :: [Passwd] -> [Passwd]
+retryHash xs = [pwReduce i | i <- myHash]
+	where myHash = [pwHash i | i <- xs]
 
-hashAndReduceList :: [Passwd] -> [Passwd]
-hashAndReduceList xs = [pwReduce i | i <- hashes]
-	where hashes = [pwHash i | i <- xs]
-
-listOfHashes :: [Passwd] -> [Hash]
-listOfHashes xs = [pwHash i | i <- xs]
+hashes :: [Passwd] -> [Hash]
+hashes xs = [pwHash i | i <- xs]
 
 findPassword :: Map.Map Hash Passwd -> Int -> Hash -> Maybe Passwd
-findPassword table n hash = case (hashLookup n hash table) of
+findPassword table n hash = case (findHashCol n hash table) of
 	Nothing -> Nothing
-	Just x -> rowSearch n x hash
+	Just x -> searhValue n x hash
 
 
-hashLookup :: Int -> Hash -> Map.Map Hash Passwd -> Maybe Passwd
-hashLookup (-1) xs table = Nothing
-hashLookup n xs table = case (Map.lookup xs table) of
-	Nothing -> hashLookup (n-1) (pwHash(pwReduce(xs))) table
+findHashCol :: Int -> Hash -> Map.Map Hash Passwd -> Maybe Passwd
+findHashCol (-1) xs table = Nothing
+findHashCol n xs table = case (Map.lookup xs table) of
+	Nothing -> findHashCol (n-1) (pwHash(pwReduce(xs))) table
 	Just x -> Just x
 
-rowSearch :: Int -> Passwd -> Hash -> Maybe Passwd
-rowSearch (-1) xs hash = Nothing
-rowSearch n xs hash
+searhValue :: Int -> Passwd -> Hash -> Maybe Passwd
+searhValue (-1) xs hash = Nothing
+searhValue n xs hash
 	|pwHash(xs) == hash = Just xs
-	|otherwise = rowSearch(n-1) (pwReduce(pwHash(xs))) hash
+	|otherwise = searhValue(n-1) (pwReduce(pwHash(xs))) hash
 
 generateTable :: IO ()
 generateTable = do
   table <- buildTable rainbowTable nLetters pwLength width height
   writeTable table filename
-
 
 test2 :: Int -> IO ([Passwd], Int)
 test2 n = do
@@ -70,3 +67,9 @@ test2 n = do
   let hs = map pwHash pws
   let result = Maybe.mapMaybe (findPassword table width) hs
   return (result, length result)
+
+main :: IO ()
+main = do
+  generateTable
+  res <- test2 10000
+  print res
