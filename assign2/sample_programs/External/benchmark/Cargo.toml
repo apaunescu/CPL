@@ -1,0 +1,12 @@
+[package]
+name = "benchmark"
+version = "0.1.0"
+authors = ["Alin <alinpaunescu@gmail.com>"]
+
+[build-dependencies]
+cc = "1.0"
+
+[dependencies]
+libc = "0.2"
+time = "0.1"
+
